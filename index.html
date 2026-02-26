@@ -24,7 +24,7 @@
             }
         </style>
     </head>
-    <body class="min-h-screen flex items-center justify-center p-4">
+    <body class="min-h-screen flex items-center justify-center p-4 relative">
         <div class="w-full max-w-md">
             <div
                 class="text-zinc-500 px-1 text-xs font-medium uppercase tracking-wider mb-2"
@@ -150,11 +150,38 @@
                                     >GitHub</span
                                 >
                             </a>
+
+                            <div class="mt-4 pt-4 border-t border-zinc-800/50">
+                                <div class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 px-1 flex justify-between items-center">
+                                    <span>Server Management</span>
+                                    <span class="flex items-center gap-1 text-indigo-400">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                                        Live
+                                    </span>
+                                </div>
+                                <a
+                                    href="/BeamMP"
+                                    class="flex items-center w-full px-4 py-3 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600/20 rounded-xl text-sm transition-all group"
+                                >
+                                    <i
+                                        class="ph ph-car text-indigo-400 mr-3 group-hover:text-indigo-300 text-xl"
+                                    ></i>
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-indigo-100">BeamMP Control Panel</span>
+                                        <span class="text-[10px] text-indigo-400/80">Map change & Server control</span>
+                                    </div>
+                                    <i class="ph ph-caret-right ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <a href="impressum.html" class="fixed bottom-4 right-4 text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors uppercase tracking-widest decoration-zinc-700 underline-offset-4 hover:underline">
+            Impressum
+        </a>
 
         <script>
             const statusDot = document.getElementById("status-dot");
