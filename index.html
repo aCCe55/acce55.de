@@ -44,10 +44,10 @@
     }
     #globe-wrap canvas {
       width: 100%; height: 100%; display: block;
-      opacity: 0.09;
+      opacity: 0.22;
       transition: opacity 0.3s;
     }
-    #globe-wrap:hover canvas { opacity: 0.18; }
+    #globe-wrap:hover canvas { opacity: 0.42; }
     /* Desktop expanded: stays same size, moves right, globe fills space */
     @media (min-width: 640px) {
       #globe-wrap.expanded {
@@ -379,10 +379,10 @@
     function drawGlobe(yaw) {
       if (!gCtx) return;
       gCtx.clearRect(0,0,GW,GH);
-      const ga = expanded?'rgba(168,192,255,0.18)':'rgba(168,192,255,0.15)';
-      const ca = expanded?'rgba(180,210,255,0.78)':'rgba(180,210,255,0.6)';
+      const ga = expanded?'rgba(168,192,255,0.28)':'rgba(168,192,255,0.26)';
+      const ca = expanded?'rgba(180,210,255,0.9)':'rgba(180,210,255,0.85)';
 
-      gCtx.strokeStyle=ga; gCtx.lineWidth=0.6;
+      gCtx.strokeStyle=ga; gCtx.lineWidth=0.8;
       for (let lat=-80;lat<=80;lat+=20){
         const pts=[]; for(let lon=-180;lon<=180;lon+=2) pts.push(rotPt(lat,lon,yaw));
         gCtx.beginPath(); tracePath(gCtx, pts); gCtx.stroke();
@@ -392,7 +392,7 @@
         gCtx.beginPath(); tracePath(gCtx, pts); gCtx.stroke();
       }
 
-      gCtx.strokeStyle=ca; gCtx.lineWidth=1.1;
+      gCtx.strokeStyle=ca; gCtx.lineWidth=1.4;
       for (const cont of CONTINENTS){
         const pts = cont.map(([la,lo]) => rotPt(la,lo,yaw));
         gCtx.beginPath(); tracePath(gCtx, pts); gCtx.stroke();
