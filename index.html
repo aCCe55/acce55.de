@@ -1,255 +1,775 @@
 <!doctype html>
 <html lang="de">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" type="image/svg+xml" href="tatze_icon.svg" />
-        <title>aCCe55 | Profile</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://unpkg.com/@phosphor-icons/web"></script>
-        <style>
-            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-            body {
-                font-family: "Inter", sans-serif;
-                background-color: #0a0a0a;
-                color: #ffffff;
-                margin: 0;
-            }
-            .dot-pattern {
-                background-image: radial-gradient(
-                    rgba(255, 255, 255, 0.1) 1px,
-                    transparent 1px
-                );
-                background-size: 16px 16px;
-            }
-        </style>
-    </head>
-    <body class="min-h-screen flex items-center justify-center p-4 relative">
-        <div class="w-full max-w-md">
-            <div
-                class="text-zinc-500 px-1 text-xs font-medium uppercase tracking-wider mb-2"
-            >
-                About Me
+<head>
+  <meta charset="UTF-8">
+  <meta property="og:title" content="aCCe55 | Profile">
+  <meta property="og:description" content="aCCe55 - Links, projects and contact. Welcome to my profile card!">
+  <meta property="og:image" content="https://acce55.de/pfp.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>aCCe55 | Profile</title>
+  <link rel="icon" type="image/svg+xml" href="tatze_icon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap");
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+    }
+
+    /* Globe – absolute inside card-wrap */
+    #globe-wrap {
+      position: absolute;
+      right: -140px;
+      top: 50%;
+      transform: translateY(-50%) rotate(15deg);
+      width: 420px;
+      height: 420px;
+      z-index: 0;
+      cursor: pointer;
+      transition: right 1s cubic-bezier(0.4,0,0.2,1),
+                  top 1s cubic-bezier(0.4,0,0.2,1),
+                  transform 1s cubic-bezier(0.4,0,0.2,1),
+                  width 1s cubic-bezier(0.4,0,0.2,1),
+                  height 1s cubic-bezier(0.4,0,0.2,1);
+    }
+    #globe-wrap canvas {
+      width: 100%; height: 100%; display: block;
+      opacity: 0.09;
+      transition: opacity 0.3s;
+    }
+    #globe-wrap:hover canvas { opacity: 0.18; }
+    /* Desktop expanded: stays same size, moves right, globe fills space */
+    @media (min-width: 640px) {
+      #globe-wrap.expanded {
+        right: -460px;
+        top: 50%;
+        transform: translateY(-50%) rotate(0deg);
+        width: 420px;
+        height: 420px;
+        cursor: default;
+        z-index: 5;
+        opacity: 1;
+      }
+      #globe-wrap.expanded canvas { opacity: 0.92; }
+    }
+    /* Mobile expanded: above card */
+    @media (max-width: 639px) {
+      #globe-wrap.expanded {
+        right: auto;
+        left: 50%;
+        top: -240px;
+        transform: translateX(-50%) rotate(0deg);
+        width: 200px;
+        height: 200px;
+        cursor: default;
+        z-index: 5;
+      }
+      #globe-wrap.expanded canvas { opacity: 0.88; }
+    }
+    #globe-wrap.expanded canvas { opacity: 0.88; }
+
+    /* Card */
+    #card {
+      position: relative;
+      z-index: 10;
+      overflow: hidden;
+      background: #0e0e12;
+      border: 1px solid rgba(168,192,255,0.3);
+      transition: transform 0.9s cubic-bezier(0.4,0,0.2,1),
+                  opacity 0.5s ease;
+    }
+
+    /* Morphing sections inside the card */
+    #profile-section  { transition: opacity 0.35s ease, max-height 0.6s ease; overflow: hidden; max-height: 500px; }
+    #server-section   { transition: opacity 0.35s ease, max-height 0.6s ease; overflow: hidden; max-height: 0; opacity: 0; }
+    #links-section    { transition: opacity 0.4s ease; }
+    #close-section    { display: none; }
+
+    #card.morphed #profile-section  { max-height: 0; opacity: 0; }
+    #card.morphed #server-section   { max-height: 500px; opacity: 1; }
+    #card.morphed #links-section    { opacity: 0; pointer-events: none; }
+    #card.morphed #close-section    { display: flex; }
+
+    /* Desktop: no card shift needed, globe moves right via CSS */
+    @media (min-width: 640px) {
+      #card-wrap.shifted { }
+      #card-wrap.unshifted { }
+    }
+    /* Mobile: slide card down so globe visible above */
+    @media (max-width: 639px) {
+      #card-wrap.shifted { margin-top: 220px; transition: margin-top 1s cubic-bezier(0.4,0,0.2,1); }
+      #card-wrap.unshifted { margin-top: 0; transition: margin-top 1s cubic-bezier(0.4,0,0.2,1); }
+    }
+
+    /* Corners */
+    .c-tl { position:absolute; top:-1px;    left:-1px;   width:10px; height:10px; border-top:2px solid #a8c0ff; border-left:2px solid #a8c0ff; }
+    .c-tr { position:absolute; top:-1px;    right:-1px;  width:10px; height:10px; border-top:2px solid #a8c0ff; border-right:2px solid #a8c0ff; }
+    .c-bl { position:absolute; bottom:-1px; left:-1px;   width:10px; height:10px; border-bottom:2px solid #a8c0ff; border-left:2px solid #a8c0ff; }
+    .c-br { position:absolute; bottom:-1px; right:-1px;  width:10px; height:10px; border-bottom:2px solid #a8c0ff; border-right:2px solid #a8c0ff; }
+
+    /* Terminal output */
+    #terminal-output {
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      line-height: 1.8;
+      font-size: 11px;
+    }
+    #terminal-output::-webkit-scrollbar { display: none; }
+
+    .cursor {
+      display: inline-block; width: 7px; height: 13px;
+      background: #a8c0ff; margin-left: 2px; vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Avatar morphs from circle to rounded square in server mode */
+    #card.morphed #avatar-wrap {
+      border-radius: 4px !important;
+      transition: border-radius 0.5s ease;
+    }
+    #card.morphed #avatar { opacity: 0; }
+    #card.morphed #debian-logo { opacity: 1; }
+
+    /* Status dot pulse when server mode */
+    .dot-pulse { animation: dotpulse 2s ease-in-out infinite; }
+    @keyframes dotpulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* Label glitch */
+    @keyframes glitch-shift {
+      0%   { clip-path: inset(0 0 95% 0); transform: translateX(-3px); }
+      20%  { clip-path: inset(30% 0 50% 0); transform: translateX(3px); }
+      40%  { clip-path: inset(60% 0 20% 0); transform: translateX(-2px); }
+      60%  { clip-path: inset(10% 0 75% 0); transform: translateX(2px); }
+      80%  { clip-path: inset(80% 0 5% 0); transform: translateX(-1px); }
+      100% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+    }
+  </style>
+</head>
+<body class="bg-[#0d0d10] text-white min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+
+  <div class="fixed inset-0 pointer-events-none z-0"
+       style="background: radial-gradient(ellipse at center, transparent 50%, #0d0d10 100%);"></div>
+
+  <div class="relative z-10 w-full max-w-md">
+
+    <div class="relative" id="card-wrap">
+    <div id="about-label" class="text-[10px] font-semibold tracking-[0.15em] uppercase px-0.5 transition-all duration-500"
+         style="color:rgba(168,192,255,0.5);">About me</div>
+
+      <!-- Globe -->
+      <div id="globe-wrap">
+        <canvas id="globe-canvas"></canvas>
+      </div>
+
+      <!-- THE card – morphs between profile and server view -->
+      <div id="card">
+        <div class="c-tl"></div><div class="c-tr"></div>
+        <div class="c-bl"></div><div class="c-br"></div>
+
+        <img src="tatze_icon.svg"
+             class="absolute -bottom-8 right-5 w-48 h-48 pointer-events-none select-none"
+             style="opacity:0.04; filter:invert(1) sepia(1) saturate(3) hue-rotate(200deg);">
+
+        <div class="p-4 sm:p-5 flex flex-col gap-4">
+
+          <!-- Top row: avatar + name + status + bio -->
+          <div class="flex gap-4 items-start">
+            <!-- Avatar: shows pfp normally, Debian ASCII in server mode -->
+            <div id="avatar-wrap" class="flex-shrink-0 relative overflow-hidden bg-[#111]"
+                 style="width:72px;height:72px; border:1px solid rgba(168,192,255,0.3); border-radius:9999px;">
+              <img id="avatar" src="pfp_small.png" data-full="pfp.png"
+                   onerror="this.src='https://ui-avatars.com/api/?name=AC&background=0d0f1a&color=a8c0ff&bold=true&size=72'"
+                   alt="aCCe55" class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500"/>
+              <div id="debian-logo" class="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500" style="background:#0a0a0d; border-radius:4px;"><pre id="debian-pre" class="select-none" style="font-family:'JetBrains Mono',monospace; font-size:3.1px; line-height:1.25; color:rgba(168,192,255,0.85); letter-spacing:0.05em; margin:0; padding:1px;"></pre></div>
             </div>
 
-            <div
-                class="bg-zinc-950 border border-zinc-800 border-dashed p-4 rounded-2xl shadow-2xl"
-            >
-                <div
-                    class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col"
-                >
-                    <div
-                        class="bg-indigo-600/20 h-24 w-full relative shrink-0 dot-pattern"
-                    ></div>
+            <div class="flex flex-col gap-1.5 pt-0.5 flex-1">
+              <!-- Title morphs: aCCe55 → aCCe55.de -->
+              <span id="card-title" class="text-[18px] font-bold tracking-tight transition-all duration-500" style="color:#a8c0ff;">aCCe55</span>
 
-                    <div class="px-6 pb-6 relative text-left">
-                        <div class="-mt-10 mb-4 inline-block">
-                            <div
-                                class="h-20 w-20 rounded-full border-4 border-zinc-900 bg-zinc-800 overflow-hidden shadow-lg"
-                            >
-                                <img
-                                    src="pfp.png"
-                                    onerror="
-                                        this.src =
-                                            'https://ui-avatars.com/api/?name=aCCe55&background=4f46e5&color=fff'
-                                    "
-                                    alt="Profile"
-                                    class="h-full w-full object-cover"
-                                />
-                            </div>
-                        </div>
+              <!-- Status badge – Discord mode -->
+              <div id="status-discord" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 w-fit"
+                   style="border:1px solid rgba(168,192,255,0.15); background:rgba(168,192,255,0.04);">
+                <div id="status-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-600 flex-shrink-0 transition-colors duration-300"></div>
+                <span id="status-text" class="text-[10px] font-bold tracking-[0.12em] uppercase text-zinc-500 transition-colors duration-300">Loading</span>
+              </div>
 
-                        <div class="flex items-center justify-between gap-3">
-                            <h1
-                                class="text-xl font-bold tracking-tight text-white"
-                            >
-                                aCCe55
-                            </h1>
-                            <div
-                                id="status-badge"
-                                class="flex items-center gap-2 px-2.5 py-1 rounded-full border border-zinc-800 bg-zinc-950/50"
-                            >
-                                <div
-                                    id="status-dot"
-                                    class="w-2 h-2 rounded-full bg-zinc-500"
-                                ></div>
-                                <span
-                                    id="status-text"
-                                    class="text-[10px] font-bold uppercase tracking-widest text-zinc-400"
-                                    >Loading</span
-                                >
-                            </div>
-                        </div>
+              <!-- Status badge – Server mode (hidden initially) -->
+              <div id="status-server" class="hidden inline-flex items-center gap-1.5 px-2.5 py-0.5 w-fit"
+                   style="border:1px solid rgba(168,192,255,0.15); background:rgba(168,192,255,0.04);">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0 dot-pulse"></div>
+                <span class="text-[10px] font-bold tracking-[0.12em] uppercase" style="color:#22c55e;">online</span>
+              </div>
 
-                        <p class="text-sm text-zinc-400 mt-2 leading-relaxed">
-                            Full time German Citizen
-                        </p>
-
-                        <div
-                            class="flex flex-wrap gap-2 py-5 border-b border-zinc-800/50"
-                        >
-                            <span
-                                class="px-2 py-0.5 rounded-md border border-zinc-700 text-[10px] font-medium text-zinc-400 uppercase"
-                                >Debian 13</span
-                            >
-                            <span
-                                class="px-2 py-0.5 rounded-md border border-zinc-700 text-[10px] font-medium text-zinc-400 uppercase"
-                                >Nginx</span
-                            >
-                            <span
-                                class="px-2 py-0.5 rounded-md border border-zinc-700 text-[10px] font-medium text-zinc-400 uppercase"
-                                >Pelican</span
-                            >
-                        </div>
-
-                        <div class="grid gap-2 mt-5">
-                            <a
-                                href="mailto:info@acce55"
-                                class="flex items-center w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-all group"
-                            >
-                                <i
-                                    class="ph ph-envelope text-zinc-400 mr-3 group-hover:text-white text-lg"
-                                ></i>
-                                <span class="truncate font-medium text-zinc-200"
-                                    >Email Me</span
-                                >
-                            </a>
-                            <a
-                                href="https://discord.com/users/573483215894085642/"
-                                target="_blank"
-                                class="flex items-center w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-all group"
-                            >
-                                <i
-                                    class="ph ph-discord-logo text-zinc-400 mr-3 group-hover:text-white text-lg"
-                                ></i>
-                                <span class="truncate font-medium text-zinc-200"
-                                    >Discord</span
-                                >
-                            </a>
-                            <a
-                                href="https://steamcommunity.com/id/aCC_e55/"
-                                target="_blank"
-                                class="flex items-center w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-all group"
-                            >
-                                <i
-                                    class="ph ph-steam-logo text-zinc-400 mr-3 group-hover:text-white text-lg"
-                                ></i>
-                                <span class="truncate font-medium text-zinc-200"
-                                    >Steam</span
-                                >
-                            </a>
-                            <a
-                                href="https://github.com/aCCe55"
-                                target="_blank"
-                                class="flex items-center w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition-all group"
-                            >
-                                <i
-                                    class="ph ph-github-logo text-zinc-400 mr-3 group-hover:text-white text-lg"
-                                ></i>
-                                <span class="truncate font-medium text-zinc-200"
-                                    >GitHub</span
-                                >
-                            </a>
-
-                            <div class="mt-4 pt-4 border-t border-zinc-800/50">
-                                <div class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 px-1 flex justify-between items-center">
-                                    <span>Server Management</span>
-                                    <span class="flex items-center gap-1 text-indigo-400">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
-                                        Live
-                                    </span>
-                                </div>
-                                <a
-                                    href="/BeamMP"
-                                    class="flex items-center w-full px-4 py-3 bg-indigo-600/10 border border-indigo-500/20 hover:bg-indigo-600/20 rounded-xl text-sm transition-all group"
-                                >
-                                    <i
-                                        class="ph ph-car text-indigo-400 mr-3 group-hover:text-indigo-300 text-xl"
-                                    ></i>
-                                    <div class="flex flex-col">
-                                        <span class="font-bold text-indigo-100">BeamMP Control Panel</span>
-                                        <span class="text-[10px] text-indigo-400/80">Map change & Server control</span>
-                                    </div>
-                                    <i class="ph ph-caret-right ml-auto text-indigo-400 group-hover:translate-x-1 transition-transform"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              <!-- Bio – profile mode -->
+              <span id="bio-profile" class="text-[12px] leading-relaxed" style="color:rgba(168,192,255,0.35);">
+                I live for endurance racing <i class="ph ph-heart inline-block translate-y-0.5" style="color:rgba(168,192,255,0.3);"></i>
+              </span>
+              <!-- Bio – server mode (uptime) -->
+              <span id="bio-server" class="mono text-[11px] hidden" style="color:rgba(168,192,255,0.4);">
+                up <span id="uptime-val">—</span>
+              </span>
             </div>
+          </div>
+
+          <hr style="border:none; border-top:1px dashed rgba(168,192,255,0.1);">
+
+          <!-- Profile section (contacts) -->
+          <div id="profile-section">
+            <div class="text-[9px] font-semibold tracking-[0.12em] uppercase mb-1.5"
+                 style="color:rgba(168,192,255,0.4);">// contact &amp; socials</div>
+            <!-- Mobile -->
+            <div class="flex flex-col sm:hidden" style="border-left:1px solid rgba(168,192,255,0.1);">
+              <a target="_blank" rel="noopener noreferrer" href="mailto:info@acce55.de" class="flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium no-underline transition-all duration-150" style="color:rgba(168,192,255,0.5);border-left:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderLeftColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderLeftColor='transparent';"><i class="ph ph-envelope text-sm"></i> Mail</a>
+              <a target="_blank" rel="noopener noreferrer" href="https://discord.com/users/573483215894085642/" class="flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium no-underline transition-all duration-150" style="color:rgba(168,192,255,0.5);border-left:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderLeftColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderLeftColor='transparent';"><i class="ph ph-discord-logo text-sm"></i> Discord</a>
+              <a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/id/aCCe55/" class="flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium no-underline transition-all duration-150" style="color:rgba(168,192,255,0.5);border-left:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderLeftColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderLeftColor='transparent';"><i class="ph ph-steam-logo text-sm"></i> Steam</a>
+              <a target="_blank" rel="noopener noreferrer" href="https://github.com/aCCe55" class="flex items-center gap-2 px-3 py-1.5 text-[12px] font-medium no-underline transition-all duration-150" style="color:rgba(168,192,255,0.5);border-left:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderLeftColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderLeftColor='transparent';"><i class="ph ph-github-logo text-sm"></i> GitHub</a>
+            </div>
+            <!-- Desktop -->
+            <div class="hidden sm:flex" style="border-top:1px solid rgba(168,192,255,0.1);">
+              <a target="_blank" rel="noopener noreferrer" href="mailto:info@acce55.de" class="flex items-center gap-1.5 px-2.5 py-2 text-[12px] font-medium no-underline transition-all duration-150 -mt-px" style="color:rgba(168,192,255,0.5);border-top:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderTopColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderTopColor='transparent';"><i class="ph ph-envelope text-sm"></i> Mail</a>
+              <a target="_blank" rel="noopener noreferrer" href="https://discord.com/users/573483215894085642/" class="flex items-center gap-2 px-2.5 py-2 text-[12px] font-medium no-underline transition-all duration-150 -mt-px" style="color:rgba(168,192,255,0.5);border-top:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderTopColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderTopColor='transparent';"><i class="ph ph-discord-logo text-sm"></i> Discord</a>
+              <a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/id/aCCe55/" class="flex items-center gap-2 px-2.5 py-2 text-[12px] font-medium no-underline transition-all duration-150 -mt-px" style="color:rgba(168,192,255,0.5);border-top:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderTopColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderTopColor='transparent';"><i class="ph ph-steam-logo text-sm"></i> Steam</a>
+              <a target="_blank" rel="noopener noreferrer" href="https://github.com/aCCe55" class="flex items-center gap-2 px-2.5 py-2 text-[12px] font-medium no-underline transition-all duration-150 -mt-px" style="color:rgba(168,192,255,0.5);border-top:2px solid transparent;" onmouseover="this.style.color='#a8c0ff';this.style.borderTopColor='#a8c0ff';" onmouseout="this.style.color='rgba(168,192,255,0.5)';this.style.borderTopColor='transparent';"><i class="ph ph-github-logo text-sm"></i> GitHub</a>
+            </div>
+          </div>
+
+          <!-- Server section (terminal) – hidden initially -->
+          <div id="server-section">
+            <div class="text-[9px] font-semibold tracking-[0.12em] uppercase mb-1.5"
+                 style="color:rgba(168,192,255,0.4);">// acce55@debian-server</div>
+            <div id="terminal-output" class="mono"></div>
+          </div>
+
+          <!-- Close button – only in server mode -->
+          <div id="close-section" class="items-center justify-end -mt-1">
+            <button id="close-btn" class="mono text-[9px] tracking-widest uppercase transition-colors"
+                    style="color:rgba(168,192,255,0.3);"
+                    onmouseover="this.style.color='#a8c0ff'"
+                    onmouseout="this.style.color='rgba(168,192,255,0.3)'">[ close ]</button>
+          </div>
+
         </div>
+      </div>
+    </div>
+  </div>
 
-        <a href="impressum.html" class="fixed bottom-4 right-4 text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors uppercase tracking-widest decoration-zinc-700 underline-offset-4 hover:underline">
-            Impressum
-        </a>
+  <script>
+    /* ── Progressive image load ── */
+    window.addEventListener('load', () => {
+      const avatar = document.getElementById('avatar');
+      const full = new Image();
+      full.onload = () => { avatar.src = full.src; };
+      full.src = avatar.dataset.full;
+    });
 
-        <script>
-            const statusDot = document.getElementById("status-dot");
-            const statusText = document.getElementById("status-text");
-            const userId = "573483215894085642";
+    /* ── Discord status ── */
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
+    const SC = { online:'#22c55e', idle:'#eab308', dnd:'#ef4444', offline:'#52525b' };
+    const SL = { online:'Online', idle:'Away', dnd:'Busy', offline:'Offline' };
+    async function fetchDiscordStatus() {
+      try {
+        const r = await fetch('https://api.lanyard.rest/v1/users/573483215894085642');
+        const d = await r.json();
+        if (!d.success) return;
+        const s = d.data.discord_status;
+        dot.style.background = SC[s] || SC.offline;
+        txt.textContent = SL[s] || 'Offline';
+        txt.style.color = SC[s] || SC.offline;
+      } catch(e) {}
+    }
+    fetchDiscordStatus();
+    setInterval(fetchDiscordStatus, 30000);
 
-            async function updateStatus() {
-                try {
-                    const response = await fetch(
-                        `https://api.lanyard.rest/v1/users/${userId}`,
-                    );
-                    const data = await response.json();
+    /* ── Globe ── */
+    const TILT  = 23.5 * Math.PI / 180;
+    const PITCH = 20   * Math.PI / 180;
+    const ROLL  = -20  * Math.PI / 180;
+    const DE_LAT = 51.2, DE_LON = 10.4;
 
-                    if (!data.success) return;
+    const CONTINENTS = [
+      [[70,-140],[72,-130],[70,-95],[72,-80],[68,-75],[63,-64],[50,-55],[47,-53],[44,-66],[42,-70],[35,-75],[30,-80],[25,-80],[20,-87],[15,-83],[8,-77],[15,-85],[20,-105],[22,-106],[25,-110],[30,-117],[34,-120],[40,-124],[48,-124],[55,-130],[60,-140],[70,-140]],
+      [[60,-44],[65,-52],[70,-52],[76,-65],[83,-30],[80,-18],[75,-18],[70,-25],[65,-37],[60,-44]],
+      [[10,-75],[8,-77],[5,-77],[0,-78],[-5,-80],[-4,-80],[-3,-78],[0,-75],[0,-70],[-5,-65],[-10,-68],[-15,-75],[-18,-70],[-22,-65],[-25,-65],[-28,-62],[-33,-60],[-38,-58],[-42,-63],[-45,-65],[-50,-68],[-53,-70],[-55,-67],[-52,-57],[-45,-56],[-40,-52],[-28,-48],[-22,-42],[-15,-38],[-10,-37],[-5,-35],[0,-48],[5,-52],[8,-60],[10,-62],[11,-70],[10,-75]],
+      [[36,-5],[36,5],[40,3],[43,-9],[44,-8],[43,-5],[44,0],[46,2],[48,-2],[48,3],[51,2],[51,4],[54,8],[55,8],[57,10],[58,5],[60,5],[62,6],[63,10],[65,14],[68,14],[70,22],[72,26],[70,30],[65,26],[60,28],[58,26],[55,24],[54,18],[54,14],[54,10],[57,10],[55,8],[54,8],[51,12],[50,14],[49,18],[46,20],[44,28],[41,28],[38,26],[37,22],[37,15],[38,13],[38,8],[36,0],[36,-5]],
+      [[56,10],[58,8],[60,5],[62,6],[64,14],[68,18],[70,22],[72,26],[70,28],[68,26],[65,22],[63,18],[62,22],[60,25],[58,22],[56,16],[56,10]],
+      [[37,-5],[37,10],[32,12],[30,32],[22,37],[12,43],[5,42],[0,42],[-5,40],[-10,38],[-15,36],[-18,36],[-22,35],[-28,32],[-34,26],[-35,20],[-30,17],[-25,15],[-18,12],[-15,12],[-10,13],[-5,10],[0,8],[5,3],[5,-3],[3,-8],[5,-15],[10,-17],[15,-17],[18,-16],[20,-17],[22,-17],[25,-15],[30,-10],[32,-5],[37,-5]],
+      [[70,30],[72,40],[70,60],[68,58],[65,58],[62,62],[60,55],[55,58],[52,58],[50,58],[45,58],[42,52],[40,52],[38,48],[35,48],[30,48],[25,57],[20,58],[12,44],[10,44],[10,78],[8,77],[5,100],[2,104],[0,104],[-5,105],[2,108],[10,104],[15,108],[18,106],[20,110],[20,117],[22,114],[24,118],[28,121],[30,122],[34,120],[38,118],[40,120],[42,130],[45,135],[48,136],[50,140],[55,135],[56,138],[55,133],[52,140],[50,140],[48,142],[46,138],[44,136],[45,133],[48,138],[50,142],[55,140],[60,150],[65,145],[68,140],[70,140],[72,130],[72,100],[70,80],[72,70],[70,60],[72,50],[70,30]],
+      [[-16,136],[-14,130],[-14,126],[-16,122],[-20,114],[-22,114],[-26,114],[-30,115],[-32,116],[-34,118],[-34,122],[-34,126],[-32,128],[-34,136],[-38,140],[-38,146],[-36,148],[-34,151],[-30,153],[-28,153],[-24,152],[-22,150],[-20,148],[-16,144],[-14,142],[-12,136],[-12,132],[-14,130],[-16,136]],
+    ];
 
-                    const status = data.data.discord_status;
+    const globeWrap   = document.getElementById('globe-wrap');
+    const globeCanvas = document.getElementById('globe-canvas');
+    let gCtx, GW, GH, GCX, GCY, GR;
+    let angle = 0, spinning = false, expanded = false, rAF;
 
-                    const statusColors = {
-                        online: "bg-green-500",
-                        idle: "bg-yellow-500",
-                        dnd: "bg-red-500",
-                        offline: "bg-zinc-500",
-                    };
+    function initCanvas() {
+      const rect = globeCanvas.getBoundingClientRect();
+      const cssW = rect.width  || 420;
+      const cssH = rect.height || 420;
+      const dpr  = window.devicePixelRatio || 1;
+      // Backing pixel buffer at full device resolution...
+      globeCanvas.width  = Math.round(cssW * dpr);
+      globeCanvas.height = Math.round(cssH * dpr);
+      // ...while every drawing coordinate (GCX/GCY/GR and everything derived
+      // from rotPt) keeps using the logical CSS-pixel space, unchanged.
+      GW = cssW; GH = cssH;
+      GCX = GW/2; GCY = GH/2;
+      GR = Math.min(GW,GH) * 0.44;
+      gCtx = globeCanvas.getContext('2d');
+      gCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
 
-                    const statusLabels = {
-                        online: "Online",
-                        idle: "Away",
-                        dnd: "Busy",
-                        offline: "Offline",
-                    };
+    function rotPt(lat, lon, yaw, rScale=1) {
+      const phi=lat*Math.PI/180, lam=lon*Math.PI/180+yaw;
+      let x=Math.cos(phi)*Math.sin(lam), y=Math.sin(phi), z=Math.cos(phi)*Math.cos(lam);
+      const y1=y*Math.cos(TILT)-z*Math.sin(TILT), z1=y*Math.sin(TILT)+z*Math.cos(TILT);
+      const y2=y1*Math.cos(PITCH)-z1*Math.sin(PITCH), z2=y1*Math.sin(PITCH)+z1*Math.cos(PITCH);
+      const x2=x*Math.cos(ROLL)-y2*Math.sin(ROLL), y3=x*Math.sin(ROLL)+y2*Math.cos(ROLL);
+      const r = GR * rScale;
+      return {x:GCX+r*x2, y:GCY-r*y3, z:z2, visible:z2>-0.05};
+    }
 
-                    statusDot.classList.remove(
-                        "bg-green-500",
-                        "bg-yellow-500",
-                        "bg-red-500",
-                        "bg-zinc-500",
-                    );
-                    statusDot.classList.add(
-                        statusColors[status] || "bg-zinc-500",
-                    );
+    // Horizon threshold must match the one used for p.visible in rotPt()
+    const HORIZON_Z = -0.05;
 
-                    statusText.innerText = statusLabels[status] || "Offline";
+    function horizonCross(a, b) {
+      const ax=(a.x-GCX)/GR, ay=(GCY-a.y)/GR, az=a.z;
+      const bx=(b.x-GCX)/GR, by=(GCY-b.y)/GR, bz=b.z;
+      const t = (HORIZON_Z-az)/(bz-az);
+      let x=ax+(bx-ax)*t, y=ay+(by-ay)*t, z=HORIZON_Z;
+      const len=Math.hypot(x,y,z)||1;
+      x/=len; y/=len; z/=len;
+      return {x:GCX+GR*x, y:GCY-GR*y};
+    }
 
-                    if (status === "online")
-                        statusText.classList.replace(
-                            "text-zinc-400",
-                            "text-green-500",
-                        );
-                    else if (status === "idle")
-                        statusText.classList.replace(
-                            "text-zinc-400",
-                            "text-yellow-500",
-                        );
-                    else if (status === "dnd")
-                        statusText.classList.replace(
-                            "text-zinc-400",
-                            "text-red-500",
-                        );
-                    else
-                        statusText.className =
-                            "text-[10px] font-bold uppercase tracking-widest text-zinc-400";
-                } catch (error) {
-                    console.error("Error fetching Discord status:", error);
-                }
-            }
+    function tracePath(ctx, pts) {
+      let drawing = false, prev = null;
+      for (const p of pts) {
+        if (p.visible) {
+          if (!drawing) {
+            const start = (prev && !prev.visible) ? horizonCross(prev, p) : p;
+            ctx.moveTo(start.x, start.y);
+            drawing = true;
+          } else {
+            ctx.lineTo(p.x, p.y);
+          }
+        } else if (drawing) {
+          const c = horizonCross(prev, p);
+          ctx.lineTo(c.x, c.y);
+          drawing = false;
+        }
+        prev = p;
+      }
+    }
 
-            updateStatus();
-            setInterval(updateStatus, 30000);
-        </script>
-    </body>
+    function drawGlobe(yaw) {
+      if (!gCtx) return;
+      gCtx.clearRect(0,0,GW,GH);
+      const ga = expanded?'rgba(168,192,255,0.18)':'rgba(168,192,255,0.15)';
+      const ca = expanded?'rgba(180,210,255,0.78)':'rgba(180,210,255,0.6)';
+
+      gCtx.strokeStyle=ga; gCtx.lineWidth=0.6;
+      for (let lat=-80;lat<=80;lat+=20){
+        const pts=[]; for(let lon=-180;lon<=180;lon+=2) pts.push(rotPt(lat,lon,yaw));
+        gCtx.beginPath(); tracePath(gCtx, pts); gCtx.stroke();
+      }
+      for (let lon=0;lon<360;lon+=20){
+        const pts=[]; for(let lat=-80;lat<=80;lat+=2) pts.push(rotPt(lat,lon,yaw));
+        gCtx.beginPath(); tracePath(gCtx, pts); gCtx.stroke();
+      }
+
+      gCtx.strokeStyle=ca; gCtx.lineWidth=1.1;
+      for (const cont of CONTINENTS){
+        const pts = cont.map(([la,lo]) => rotPt(la,lo,yaw));
+        gCtx.beginPath(); tracePath(gCtx, pts); gCtx.stroke();
+      }
+
+      if (expanded) {
+        const de=rotPt(DE_LAT,DE_LON,yaw);
+        if (de.visible){
+          gCtx.beginPath();gCtx.arc(de.x,de.y,5,0,Math.PI*2);
+          gCtx.fillStyle='#a8c0ff';gCtx.fill();
+          gCtx.beginPath();gCtx.arc(de.x,de.y,9,0,Math.PI*2);
+          gCtx.strokeStyle='rgba(168,192,255,0.4)';gCtx.lineWidth=1;gCtx.stroke();
+        }
+      }
+      // Draw meteors
+      drawMeteors();
+    }
+
+    // ── Meteor system ──
+    const meteors = [];
+    const METEOR_ALT = 1.09; // shell radius above the globe surface (1 = surface), so trails read as burning up in the "atmosphere" instead of sitting flush with the continents
+
+    function spawnMeteor() {
+      const lat = (Math.random() * 120) - 60;
+      const lon = Math.random() * 360 - 180;
+      const dir = Math.random() * Math.PI * 2;
+      const length = 0.18 + Math.random() * 0.14;
+      const speed  = 0.003 + Math.random() * 0.003;
+      meteors.push({ lat, lon, dir, progress: 0, speed, length,
+        fadeIn:  length * 0.25,
+        fadeOut: length * 0.35,
+        maxOpacity: 0.75 + Math.random() * 0.25 });
+    }
+
+    let meteorTimer = 0;
+    let nextMeteor = 420 + Math.random() * 540;
+
+    function drawMeteors() {
+      meteorTimer++;
+      if (meteorTimer >= nextMeteor) {
+        spawnMeteor();
+        meteorTimer = 0;
+        nextMeteor = 420 + Math.random() * 540;
+      }
+
+      for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        m.progress += m.speed;
+
+        // Fade in/out envelope
+        const totalLife = m.length + 0.12;
+        let opacity = m.maxOpacity;
+        if (m.progress < m.fadeIn) {
+          opacity *= m.progress / m.fadeIn;
+        } else if (m.progress > totalLife - m.fadeOut) {
+          opacity *= Math.max(0, (totalLife - m.progress) / m.fadeOut);
+        }
+
+        // Build trail points along great circle
+        const steps = 24;
+        const points = [];
+        for (let s = 0; s <= steps; s++) {
+          const d = (m.progress - m.length) + (m.length * s / steps);
+          if (d < 0) continue;
+          const latR = m.lat * Math.PI / 180;
+          const lonR = m.lon * Math.PI / 180;
+          const newLat = Math.asin(
+            Math.sin(latR)*Math.cos(d) + Math.cos(latR)*Math.sin(d)*Math.cos(m.dir));
+          const newLon = lonR + Math.atan2(
+            Math.sin(m.dir)*Math.sin(d)*Math.cos(latR),
+            Math.cos(d) - Math.sin(latR)*Math.sin(newLat));
+          const p = rotPt(newLat*180/Math.PI, newLon*180/Math.PI, angle, METEOR_ALT);
+          if (p.visible) points.push({ p, t: s / steps });
+        }
+
+        if (points.length > 1 && opacity > 0.01) {
+          const head = points[points.length - 1].p;
+          const tail = points[0].p;
+
+          // Trail
+          const grad = gCtx.createLinearGradient(tail.x, tail.y, head.x, head.y);
+          grad.addColorStop(0,   'rgba(168,192,255,0)');
+          grad.addColorStop(0.5, `rgba(200,220,255,${opacity * 0.35})`);
+          grad.addColorStop(1,   `rgba(255,255,255,${opacity})`);
+          gCtx.beginPath();
+          gCtx.moveTo(tail.x, tail.y);
+          for (let k = 1; k < points.length; k++) gCtx.lineTo(points[k].p.x, points[k].p.y);
+          gCtx.strokeStyle = grad;
+          gCtx.lineWidth = 1.3;
+          gCtx.lineCap = 'round';
+          gCtx.stroke();
+
+          // Star cross at head
+          const prev = points[points.length - 2]?.p || tail;
+          const dx = head.x - prev.x, dy = head.y - prev.y;
+          const len = Math.sqrt(dx*dx + dy*dy) || 1;
+          const ax = dx/len, ay = dy/len;   // along trail
+          const px = -ay,  py =  ax;        // perpendicular
+
+          const armL = 5.0 * opacity;
+          const armS = 2.5 * opacity;
+          const armD = 1.8 * opacity;
+
+          gCtx.save();
+          gCtx.lineCap = 'round';
+
+          // Main cross (+ shape)
+          gCtx.strokeStyle = `rgba(255,255,255,${opacity})`;
+          gCtx.lineWidth = 0.8;
+          gCtx.beginPath();
+          gCtx.moveTo(head.x - ax*armL, head.y - ay*armL);
+          gCtx.lineTo(head.x + ax*0.8,  head.y + ay*0.8);
+          gCtx.stroke();
+          gCtx.beginPath();
+          gCtx.moveTo(head.x - px*armS, head.y - py*armS);
+          gCtx.lineTo(head.x + px*armS, head.y + py*armS);
+          gCtx.stroke();
+
+          // Diagonal arms (× shape)
+          const d45x  = (ax+px)*0.707, d45y  = (ay+py)*0.707;
+          const d45x2 = (ax-px)*0.707, d45y2 = (ay-py)*0.707;
+          gCtx.strokeStyle = `rgba(255,255,255,${opacity * 0.45})`;
+          gCtx.lineWidth = 0.5;
+          gCtx.beginPath();
+          gCtx.moveTo(head.x - d45x*armD,  head.y - d45y*armD);
+          gCtx.lineTo(head.x + d45x*armD,  head.y + d45y*armD);
+          gCtx.stroke();
+          gCtx.beginPath();
+          gCtx.moveTo(head.x - d45x2*armD, head.y - d45y2*armD);
+          gCtx.lineTo(head.x + d45x2*armD, head.y + d45y2*armD);
+          gCtx.stroke();
+
+          // Center dot
+          gCtx.fillStyle = `rgba(255,255,255,${opacity})`;
+          gCtx.beginPath();
+          gCtx.arc(head.x, head.y, 1.0, 0, Math.PI*2);
+          gCtx.fill();
+          gCtx.restore();
+        }
+
+        if (m.progress > m.length + 0.12) meteors.splice(i, 1);
+      }
+    }
+
+    let spinTarget = null;
+    let spinStart = null;
+    let spinDist = 0;
+    let spinProgress = 0;  // 0..1
+
+    // Ease-in-out cubic: slow start, fast middle, slow stop, no overshoot
+    function easeInOut(t) {
+      return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+    }
+
+    function animateGlobe() {
+      if (spinning && spinTarget !== null) {
+        spinProgress = Math.min(spinProgress + 0.008, 1);  // duration: ~125 frames ~2s
+        angle = spinStart + spinDist * easeInOut(spinProgress);
+        if (spinProgress >= 1) {
+          angle = spinTarget; spinning = false;
+        }
+      } else if (!expanded) {
+        angle += 0.003;
+      }
+      drawGlobe(angle);
+      rAF = requestAnimationFrame(animateGlobe);
+    }
+
+    window.addEventListener('load', () => {
+      const pre = document.getElementById('debian-pre');
+      if (pre) pre.textContent = [
+        '         _,met$$$$$gg.          ',
+        '      ,g$$$$$$$$$$$$$$$P.       ',
+        '    ,g$$P""       """Y$$.".',
+        "   ,$$P'              `$$$.     ",
+        " ',$$P       ,ggs.     `$$b:   ",
+        ' `d$$\'     ,$P"\'   .    $$$    ',
+        "  $$P      d$'     ,    $$P    ",
+        "  $$:      $$.   -    ,d$$'    ",
+        "  $$;      Y$b._   _,d$P'      ",
+        '  Y$$.    `.`"Y$$$$P"\'         ',
+        '  `$$b      "-.__               ',
+        '   `Y$$b                        ',
+        '    `Y$$.                       ',
+        '      `$$b.                     ',
+        '        `Y$$b.                  ',
+        '          `"Y$b._               ',
+        '              `""""             '
+      ].join('\n');
+      initCanvas(); animateGlobe();
+    });
+
+    /* ── Typewriter ── */
+    const termOut = document.getElementById('terminal-output');
+    let tQ=[], tR=false;
+    function typeLine(line){
+      return new Promise(res=>{tQ.push({line,res});if(!tR)nextLine();});
+    }
+    function typeBlank(){
+      const el=document.createElement('div');el.innerHTML='&nbsp;';
+      termOut.appendChild(el);return new Promise(r=>setTimeout(r,50));
+    }
+    function nextLine(){
+      if(!tQ.length){tR=false;return;}tR=true;
+      const{line,res}=tQ.shift();
+      const isCmd=line.startsWith('>');
+      const el=document.createElement('div');
+      el.style.color=isCmd?'#a8c0ff':'rgba(168,192,255,0.55)';
+      if(!isCmd)el.style.paddingLeft='12px';
+      el.style.fontFamily='JetBrains Mono,monospace';el.style.fontSize='11px';
+      const cur=document.createElement('span');cur.className='cursor';el.appendChild(cur);
+      termOut.appendChild(el);
+      let i=0;const chars=line.split('');
+      const iv=setInterval(()=>{
+        if(i<chars.length){el.insertBefore(document.createTextNode(chars[i]),cur);i++;termOut.scrollTop=termOut.scrollHeight;}
+        else{clearInterval(iv);cur.remove();res();setTimeout(nextLine,isCmd?100:30);}
+      },isCmd?16:5);
+    }
+
+    async function runTerminal(data) {
+      termOut.innerHTML='';
+      await typeLine('> uname -a');
+      await typeLine('Linux debian-server — x86_64 GNU/Linux');
+      await typeBlank();
+      await typeLine('> cpu / ram / disk');
+      if(data?.cpu) await typeLine('CPU: '+data.cpu+'%');
+      if(data?.ram) await typeLine('RAM: '+data.ram.used+'MB / '+data.ram.total+'MB ('+data.ram.percent+'%)');
+      if(data?.disk) await typeLine('SSD:  '+data.disk.used+' used / '+data.disk.total+' total — '+data.disk.free+' free ('+data.disk.percent+')');
+      if(data?.hdd)  await typeLine('HDD:  '+data.hdd.used+' used / '+data.hdd.total+' total — '+data.hdd.free+' free ('+data.hdd.percent+')');
+      await typeBlank();
+      await typeLine('> docker ps');
+      const svc=data?.services||{};
+      const rows=[
+        ['nginx',     svc.nginx,     '[host]  '],
+        ['nextcloud', svc.nextcloud, '[docker]'],
+        ['mariadb',   svc.mariadb,   '[docker]'],
+        ['collabora', svc.collabora, '[docker]'],
+        ['whiteboard',svc.whiteboard,'[docker]'],
+        ['stirling',  svc.stirling,  '[docker]'],
+        ['dyndns',    svc.dyndns,    '[docker]'],
+        ['minecraft', svc.minecraft, '[docker]'],
+      ];
+      for(const[name,status,tag]of rows){
+        const el=document.createElement('div');
+        el.style.paddingLeft='12px';
+        el.style.color=status==='running'?'#22c55e':'#ef4444';
+        el.style.fontFamily='JetBrains Mono,monospace';el.style.fontSize='11px';
+        el.textContent=(status==='running'?'✓':'✗')+' '+tag+' '+name.padEnd(12)+(status||'unknown');
+        termOut.appendChild(el);termOut.scrollTop=termOut.scrollHeight;
+        await new Promise(r=>setTimeout(r,80));
+      }
+      await typeBlank();
+      await typeLine('> location --resolve');
+      await typeLine('Frankfurt, DE — 50.1°N 8.7°E');
+      await typeBlank();
+      const end=document.createElement('div');
+      end.style.color='#a8c0ff';end.style.fontFamily='JetBrains Mono,monospace';end.style.fontSize='11px';
+      end.innerHTML='> <span class="cursor"></span>';termOut.appendChild(end);
+    }
+
+    /* ── Label corruption animation ── */
+    const CHARS = '!@#$%^&*<>?/\\|[]{}01';
+    function corruptLabel(el, target) {
+      const original = el.textContent;
+      const len = Math.max(original.length, target.length);
+      let frame = 0;
+      const total = 18;
+      const iv = setInterval(() => {
+        frame++;
+        const progress = frame / total;
+        let result = '';
+        for (let i = 0; i < len; i++) {
+          if (i < target.length * progress) {
+            result += target[i] || '';
+          } else {
+            result += CHARS[Math.floor(Math.random() * CHARS.length)];
+          }
+        }
+        el.textContent = result;
+        if (frame >= total) { clearInterval(iv); el.textContent = target; }
+      }, 55);
+    }
+
+    /* ── Morph open ── */
+    const card        = document.getElementById('card');
+    const cardTitle   = document.getElementById('card-title');
+    const statusDsc   = document.getElementById('status-discord');
+    const statusSrv   = document.getElementById('status-server');
+    const bioProfile  = document.getElementById('bio-profile');
+    const bioServer   = document.getElementById('bio-server');
+    const uptimeVal   = document.getElementById('uptime-val');
+    const aboutLabel  = document.getElementById('about-label');
+
+    globeWrap.addEventListener('click', async () => {
+      if (expanded) return;
+      expanded = true; spinning = true;
+
+      // Fetch data immediately
+      let data = null;
+      try {
+        const r = await fetch('/status.php',{cache:'no-store'});
+        if(r.ok) data = await r.json();
+      } catch(e){}
+
+      // Set spin target to Germany longitude
+      spinTarget = -(DE_LON * Math.PI / 180);
+      // Shortest path
+      let rawDiff = spinTarget - angle;
+      spinDist = ((rawDiff + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      spinStart = angle;
+      spinProgress = 0;
+      spinning = true;
+
+      // Expand globe and slide card down
+      globeWrap.classList.add('expanded');
+      const cardWrap = document.getElementById('card-wrap');
+      if (cardWrap) { cardWrap.classList.remove('unshifted'); cardWrap.classList.add('shifted'); }
+      setTimeout(()=>initCanvas(), 1050);
+
+      // Corrupt label animation: About me → SERVER
+      corruptLabel(aboutLabel, 'SERVER');
+
+      // After globe expands – morph the card content
+      setTimeout(()=>{
+        // Title: aCCe55 → aCCe55.de
+        let suffix = '.de';
+        let i = 0;
+        const iv = setInterval(()=>{
+          if(i<suffix.length){ cardTitle.textContent += suffix[i]; i++; }
+          else clearInterval(iv);
+        }, 120);
+
+        // Swap status badge
+        statusDsc.classList.add('hidden');
+        statusSrv.classList.remove('hidden');
+
+        // Swap bio to uptime
+        bioProfile.classList.add('hidden');
+        if(data?.uptime){ uptimeVal.textContent = data.uptime; }
+        bioServer.classList.remove('hidden');
+
+        // Morph card sections
+        card.classList.add('morphed');
+
+        // Start terminal after sections transition
+        setTimeout(()=>runTerminal(data), 700);
+      }, 800);
+    });
+
+    /* ── Morph close ── */
+    function closeEasterEgg(){
+      if(!expanded) return;
+      expanded=false; spinning=false;
+
+      // Stop terminal
+      tQ=[]; tR=false; termOut.innerHTML='';
+
+      // Revert card
+      card.classList.remove('morphed');
+      cardTitle.textContent='aCCe55';
+      statusDsc.classList.remove('hidden');
+      statusSrv.classList.add('hidden');
+      bioProfile.classList.remove('hidden');
+      bioServer.classList.add('hidden');
+      corruptLabel(aboutLabel,'About me');
+
+      spinTarget = null; spinning = false; spinProgress = 0; spinDist = 0;
+
+      // Slide card back up and shrink globe
+      const cardWrap2 = document.getElementById('card-wrap');
+      if (cardWrap2) { cardWrap2.classList.remove('shifted'); cardWrap2.classList.add('unshifted'); }
+      globeWrap.classList.remove('expanded');
+      setTimeout(()=>initCanvas(), 1050);
+    }
+
+    document.getElementById('close-btn').addEventListener('click', closeEasterEgg);
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeEasterEgg(); });
+  </script>
+</body>
 </html>
