@@ -1,12 +1,11 @@
 <?php
-// status.php – liegt in /var/www/html/status.php
-// Ruft das bash script auf und gibt JSON zurück
+// Runs status.sh and returns its JSON output.
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: https://acce55.de');
 header('Cache-Control: no-cache, no-store');
 
-// Nur von acce55.de erlaubt
+// Only answer requests addressed to acce55.de
 $allowed = ['acce55.de', 'www.acce55.de'];
 $host = $_SERVER['HTTP_HOST'] ?? '';
 if (!in_array($host, $allowed)) {
